@@ -11,7 +11,7 @@ baud_rate = 9600
 ser = serial.Serial(arduino_port, baud_rate)
 
 # Crea un diccionario para almacenar los datos
-data = {}
+data = []
 
 # Definir la ubicación y la zona horaria
 latitud = 7.1420939356621105
@@ -28,7 +28,7 @@ try:
         values = line.split(',')
 
         if len(values) == 7:  # Asegúrate de que haya 7 valores
-            dato1, dato2, dato3, dato4, dato5, dato6, dato7 = map(int, values)
+            dato1, dato2, dato3, dato4, dato5, dato6, dato7 = map(float, values)
 
             # Obtener la fecha y hora actual
             fechahoy = datetime.datetime.now()
@@ -42,26 +42,25 @@ try:
             # Obtener la posición solar
             posicion_solar = pvlib.solarposition.get_solarposition(fecha, ubicacion.latitude, ubicacion.longitude, altitud)
 
-            # Obtener el angulo cenital
+            # Obtener el ángulo cenital
             azimuth = float(posicion_solar['azimuth'])
             elevation = float(posicion_solar['elevation'])
 
-            # Almacena los datos en el diccionario
-            data['dato1'] = dato1
-            data['dato2'] = dato2
-            data['dato3'] = dato3
-            data['dato4'] = dato4
-            data['dato5'] = dato5
-            data['dato6'] = dato6
-            data['dato7'] = dato7
-            data['elevation'] = elevation  # Agrega la elevación
-            data['azimuth'] = azimuth  # Agrega el azimuth
+            # Almacena los datos en una lista
+            data.append([fechahoy, dato1, dato2, dato3, dato4, dato5, dato6, dato7, elevation, azimuth])
 
             # Escribe el diccionario en un archivo JSON
             with open('datos.json', 'w') as json_file:
                 json.dump(data, json_file)
                 print("Datos escritos en datos.json")
                 print(data)
+
+            # Crear un DataFrame de pandas con los datos
+            df = pd.DataFrame(data, columns=['FechaHora', 'Dato1', 'Dato2', 'Dato3', 'Dato4', 'Dato5', 'Dato6', 'Dato7', 'Elevation', 'Azimuth'])
+
+            # Guardar el DataFrame en un archivo Excel (xlsx)
+            df.to_excel('datos.xlsx', index=False)
+            print("Datos escritos en datos.xlsx")
 
 except KeyboardInterrupt:
     ser.close()
